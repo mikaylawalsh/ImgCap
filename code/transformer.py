@@ -49,7 +49,8 @@ class AttentionMatrix(tf.keras.layers.Layer):
         # Those weights are then used to create linear combinations of the corresponding values for each query.
         # Those queries will become the new embeddings. Return attention score as per lecture slides.
 
-        score = (tf.matmul(Q, K, transpose_b=True))/tf.math.sqrt(tf.cast(window_size_keys, tf.float32))
+        score = (tf.matmul(Q, K, transpose_b=True)) / \
+            tf.math.sqrt(tf.cast(window_size_keys, tf.float32))
         if self.use_mask:
             score = score + atten_mask
         return tf.nn.softmax(score)
@@ -147,9 +148,9 @@ class TransformerBlock(tf.keras.layers.Layer):
         self.ff_layer = tf.keras.Sequential([self.dense1, self.dense2])
 
         self.self_atten = AttentionHead(
-            emb_sz, emb_sz, True) if not MultiHeadedAttention else MultiHeadedAttention(emb_sz, True)
+            emb_sz, emb_sz, True)
         self.self_context_atten = AttentionHead(
-            emb_sz, emb_sz, False) if not MultiHeadedAttention else MultiHeadedAttention(emb_sz, False)
+            emb_sz, emb_sz, False)
         self.layer_norm = tf.keras.layers.LayerNormalization()
 
     @tf.function
