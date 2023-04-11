@@ -70,7 +70,11 @@ class AttentionHead(tf.keras.layers.Layer):
         self.Wv = tf.Variable(tf.random.normal(
             [input_size, output_size], stddev=0.01, dtype=tf.float32))
 
-        self.mat = AttentionMatrix(use_mask=self.use_mask)
+        self.K = None
+        self.Q = None
+        self.V = None
+
+        self.attn_mtx = AttentionMatrix(use_mask=self.use_mask)
 
     @tf.function
     def call(self, inputs_for_keys, inputs_for_values, inputs_for_queries):
@@ -91,13 +95,13 @@ class AttentionHead(tf.keras.layers.Layer):
         # - Call your AttentionMatrix layer with the keys and queries.
         # - Apply the attention matrix to the values.
 
-        K = tf.tensordot(inputs_for_keys, self.Wk, 1)
-        V = tf.tensordot(inputs_for_values, self.Wv, 1)
-        Q = tf.tensordot(inputs_for_queries, self.Wq, 1)
+        self.K = tf.tensordot(inputs_for_keys, self.Wk, 1)
+        self.V = tf.tensordot(inputs_for_values, self.Wv, 1)
+        self.Q = tf.tensordot(inputs_for_queries, self.Wq, 1)
 
-        inputs = K, Q
-        mat = self.mat(inputs)
-        ret = mat@V
+        inputs = self.K, self.Q
+        mat = self.attn_mtx(inputs)
+        ret = mat@self.V
 
         return ret
 

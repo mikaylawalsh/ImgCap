@@ -98,6 +98,14 @@ class TransformerDecoder(tf.keras.Model):
         # 4) Apply dense layer(s) to the decoder out to generate logits
         imgs = self.image_embedding(tf.expand_dims(encoded_images, 1))
         pos = self.encoding(captions)
-        logits = self.decoder(pos, imgs) #shape error coming from here? 
+        logits = self.decoder(pos, imgs)  # shape error coming from here? x
         probs = self.classifier(logits)
         return probs
+
+    def get_config(self):
+        config = {
+            "vocab_size": self.vocab_size,
+            "hidden_size": self.hidden_size,
+            "window_size": self.window_size,
+        }
+        return config

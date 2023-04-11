@@ -76,6 +76,8 @@ class ImageCaptionModel(tf.keras.Model):
             print(
                 f"\r[Train {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
 
+        # returning correct thing 
+        print()
         return avg_loss, avg_acc, avg_prp
 
     def test(self, test_captions, test_image_features, padding_index, batch_size=30):
@@ -128,6 +130,12 @@ class ImageCaptionModel(tf.keras.Model):
 
         print()
         return avg_prp, avg_acc
+
+    def get_config(self) :
+        return {"decoder": self.decoder}
+    @classmethod
+    def from_config(cls, config) :
+        return cls(**config)
 
 
 def accuracy_function(prbs, labels, mask):
