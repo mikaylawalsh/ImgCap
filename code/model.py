@@ -36,6 +36,7 @@ class ImageCaptionModel(tf.keras.Model):
         # NOTE: shuffle the training examples (perhaps using tf.random.shuffle on a
         # range of indices spanning # of training entries, then tf.gather)
         # to make training smoother over multiple epochs.
+        num_batches = int(len(train_captions) / batch_size)
         indices = tf.random.shuffle(range(len(train_image_features)))
         shuffled_images = tf.gather(train_image_features, indices)
         shuffled_captions = tf.gather(train_captions, indices)
@@ -60,8 +61,8 @@ class ImageCaptionModel(tf.keras.Model):
                 num_predictions = tf.reduce_sum(tf.cast(mask, tf.float32))
                 loss = self.loss_function(probs, decoder_labels, mask)
                 grads = tape.gradient(loss, self.trainable_weights)
-                self.optimizer.apply_gradients(self.trainable_weights, grads)
-                
+                self.optimizer.apply_gradients(zip(grads, self.trainable_weights))
+
             accuracy = self.accuracy_function(probs, decoder_labels, mask)
 
             total_loss += loss
@@ -69,9 +70,12 @@ class ImageCaptionModel(tf.keras.Model):
             total_correct += num_predictions * accuracy
 
         # need to print these for every batch?
-        avg_loss = float(total_loss / total_seen)
-        avg_acc = float(total_correct / total_seen)
-        avg_prp = np.exp(avg_loss)
+            avg_loss = float(total_loss / total_seen)
+            avg_acc = float(total_correct / total_seen)
+            avg_prp = np.exp(avg_loss)
+            print(
+                f"\r[Train {index+1}/{num_batches}]\t loss={avg_loss:.3f}\t acc: {avg_acc:.3f}\t perp: {avg_prp:.3f}", end='')
+
         return avg_loss, avg_acc, avg_prp
 
     def test(self, test_captions, test_image_features, padding_index, batch_size=30):

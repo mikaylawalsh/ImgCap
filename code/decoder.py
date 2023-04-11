@@ -23,34 +23,33 @@ class RNNDecoder(tf.keras.layers.Layer):
 
         # Define feed forward layer to embed image features into a vector
         # with the models hidden size ??
-        self.image_embedding = tf.keras.layers.Dense(
+        self.image_embedding1 = tf.keras.layers.Dense(
             hidden_size, activation='leaky_relu')
+        self.image_embedding2 = tf.keras.layers.Dense(
+            hidden_size)
+        self.image_embedding = tf.keras.Sequential(
+            [self.image_embedding1, self.image_embedding2])
 
         # Define english embedding layer:
         self.embedding = tf.keras.layers.Embedding(vocab_size, hidden_size)
 
         # Define decoder layer that handles language and image context:
-        self.decoder = tf.keras.layers.LSTM(hidden_size, return_sequences=True)
+        self.decoder = tf.keras.layers.GRU(hidden_size, return_sequences=True)
 
         # Define classification layer (LOGIT OUTPUT)
         self.dense1 = tf.keras.layers.Dense(
-            500, activation='leaky_relu')  # make even bigger?
+            hidden_size, activation='leaky_relu')  # make even bigger?
         self.dense2 = tf.keras.layers.Dense(vocab_size)
 
-        self.seq = tf.keras.Sequential([self.dense1, self.dense2])
-
-        self.classifier = self.seq
+        self.classifier = tf.keras.Sequential([self.dense1, self.dense2])
 
     def call(self, encoded_images, captions):
         # TODO:
         # 1) Embed the encoded images into a vector of the correct dimension for initial state
         # 2) Pass your english sentance embeddings, and the image embeddings, to your decoder
         # 3) Apply dense layer(s) to the decoder to generate prediction **logits**
-        print(encoded_images.shape)
-        print(captions.shape)
         imgs = self.image_embedding(encoded_images)
         wrds = self.embedding(captions)
-        # how to pass 2 arguments
         logits = self.decoder(wrds, initial_state=imgs)
         logits = self.classifier(logits)
 
@@ -71,16 +70,25 @@ class TransformerDecoder(tf.keras.Model):
         # TODO: Define image and positional encoding, transformer decoder, and classification layers
 
         # Define feed forward layer to embed image features into a vector
-        self.image_embedding = None
+        self.image_embedding1 = tf.keras.layers.Dense(
+            hidden_size, activation='leaky_relu')
+        self.image_embedding2 = tf.keras.layers.Dense(
+            hidden_size)
+        self.image_embedding = tf.keras.Sequential(
+            [self.image_embedding1, self.image_embedding2])
 
         # Define positional encoding to embed and offset layer for language:
-        self.encoding = None
+        self.encoding = PositionalEncoding(
+            vocab_size, hidden_size, window_size)  # need parens?
 
         # Define transformer decoder layer:
-        self.decoder = None
+        self.decoder = TransformerBlock(hidden_size)  # need parens?
 
         # Define classification layer (logits)
-        self.classifier = None
+        self.dense1 = tf.keras.layers.Dense(
+            hidden_size, activation='leaky_relu')
+        self.dense2 = tf.keras.layers.Dense(vocab_size)  # softmax? have probs?
+        self.classifier = tf.keras.Sequential([self.dense1, self.dense2])
 
     def call(self, encoded_images, captions):
         # TODO:
@@ -88,5 +96,8 @@ class TransformerDecoder(tf.keras.Model):
         # 2) Pass the captions through your positional encoding layer
         # 3) Pass the english embeddings and the image sequences to the decoder
         # 4) Apply dense layer(s) to the decoder out to generate logits
-        probs = None
+        imgs = self.image_embedding(tf.expand_dims(encoded_images, 1))
+        pos = self.encoding(captions)
+        logits = self.decoder(pos, imgs) #shape error coming from here? 
+        probs = self.classifier(logits)
         return probs
