@@ -64,16 +64,12 @@ class AttentionHead(tf.keras.layers.Layer):
         # TODO:
         # Initialize the weight matrices for K, V, and Q.
         # They should be able to multiply an input_size vector to produce an output_size vector
-        self.Wq = tf.Variable(tf.random.normal(
-            [input_size, output_size], stddev=0.01, dtype=tf.float32))
-        self.Wk = tf.Variable(tf.random.normal(
-            [input_size, output_size], stddev=0.01, dtype=tf.float32))
-        self.Wv = tf.Variable(tf.random.normal(
-            [input_size, output_size], stddev=0.01, dtype=tf.float32))
-
-        self.K = None
-        self.Q = None
-        self.V = None
+        self.K = tf.Variable(tf.random.normal(
+            [input_size, output_size], stddev=0.01))
+        self.Q = tf.Variable(tf.random.normal(
+            [input_size, output_size], stddev=0.01))
+        self.V = tf.Variable(tf.random.normal(
+            [input_size, output_size], stddev=0.01))
 
         self.attn_mtx = AttentionMatrix(use_mask=self.use_mask)
 
@@ -96,13 +92,12 @@ class AttentionHead(tf.keras.layers.Layer):
         # - Call your AttentionMatrix layer with the keys and queries.
         # - Apply the attention matrix to the values.
 
-        self.K = tf.tensordot(inputs_for_keys, self.Wk, 1)
-        self.V = tf.tensordot(inputs_for_values, self.Wv, 1)
-        self.Q = tf.tensordot(inputs_for_queries, self.Wq, 1)
+        K = tf.tensordot(inputs_for_keys, self.K, 1)
+        V = tf.tensordot(inputs_for_values, self.V, 1)
+        Q = tf.tensordot(inputs_for_queries, self.Q, 1)
 
-        inputs = self.K, self.Q
-        mat = self.attn_mtx(inputs)
-        ret = mat@self.V
+        mat = self.attn_mtx((K, Q))
+        ret = mat@V
 
         return ret
 

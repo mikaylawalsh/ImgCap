@@ -60,7 +60,7 @@ class RNNDecoder(tf.keras.layers.Layer):
 
 class TransformerDecoder(tf.keras.Model):
 
-    def __init__(self, vocab_size, hidden_size, window_size, **kwargs):
+    def __init__(self, vocab_size=639, hidden_size=256, window_size=20, **kwargs):
 
         super().__init__(**kwargs)
         self.vocab_size = vocab_size
